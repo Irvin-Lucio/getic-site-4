@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getic</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #000000;
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Modal para imagen ampliada */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            overflow: auto;
+        }
+        
+        .modal-content {
+            display: block;
+            margin: auto;
+            max-width: 90%;
+            max-height: 90%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #bbb;
+        }
+        
+        /* Login Container */
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .login-box {
+            background: #111111;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid #333333;
+        }
+        
+        .login-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+        
+        .login-input {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border: 2px solid #333333;
+            border-radius: 6px;
+            background-color: #222222;
+            color: #ffffff;
+            font-size: 16px;
+        }
+        
+        .login-input:focus {
+            outline: none;
+            border-color: #555555;
+        }
+        
+        .login-button {
+            width: 100%;
+            padding: 12px;
+            background-color: #333333;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s ease;
+        }
+        
+        .login-button:hover {
+            background-color: #555555;
+        }
+        
+        .login-error {
+            color: #ff5555;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        /* Barra lateral */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, #111111, #333333);
+            color: white;
+            padding: 25px 20px;
+            position: fixed;
+            height: 100vh;
+            box-shadow: 2px 0 10px rgba(255, 255, 255, 0.1);
+            z-index: 100;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            display: none;
+        }
+        
+        .sidebar.active {
+            transform: translateX(0);
+        }
+        
+        /* Men煤 hamburguesa para m贸viles */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 101;
+            background: #333333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #ffffff;
+        }
+        
+        .logo::before {
+            content: "馃寪";
+            margin-right: 10px;
+            font-size: 24px;
+        }
+        
+        .menu-section {
+            margin-bottom: 25px;
+        }
+        
+        .menu-title {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #aaaaaa;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .menu-items {
+            list-style: none;
+        }
+        
+        .menu-item {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            color: #ffffff;
+            border: 1px solid #333333;
+        }
+        
+        .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid #555555;
+        }
+        
+        .menu-item.active {
+            background-color: #333333;
+            font-weight: 500;
+            border: 1px solid #777777;
+        }
+        
+        .menu-item::before {
+            content: "馃搷";
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        
+        /* Contenido principal */
+        .main-content {
+            margin-left: 0;
+            padding: 30px;
+            padding-top: 80px;
+            transition: margin 0.3s ease;
+            min-height: 100vh;
+            background-color: #000000;
+            display: none;
+        }
+        
+        @media (min-width: 769px) {
+            .sidebar {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 280px;
+                padding-top: 30px;
+            }
+            .menu-toggle {
+                display: none;
+            }
+        }
+        
+        .welcome-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 60px);
+            text-align: center;
+        }
+        
+        .welcome-title {
+            font-size: 42px;
+            color: #ffffff;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        .welcome-subtitle {
+            font-size: 18px;
+            color: #aaaaaa;
+            max-width: 600px;
+        }
+        
+        .region-card {
+            display: none;
+            background: #111111;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(255, 255, 255, 0.05);
+            margin-bottom: 30px;
+            border: 1px solid #333333;
+        }
+        
+        .region-card.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .region-title {
+            color: #ffffff;
+            font-size: 28px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #333333;
+        }
+        
+        .plaza-list {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .plaza-item {
+            padding: 15px;
+            background: #222222;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #555555;
+            color: #ffffff;
+        }
+        
+        .plaza-item:hover {
+            background: #333333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Detalles de plaza */
+        .plaza-detail {
+            display: none;
+            margin-top: 30px;
+            padding: 25px;
+            background: #111111;
+            border-radius: 10px;
+            border-left: 4px solid #555555;
+            color: #ffffff;
+        }
+        
+        .plaza-detail.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .plaza-detail-title {
+            color: #ffffff;
+            font-size: 24px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333333;
+        }
+        
+        .plaza-info {
+            margin-bottom: 15px;
+            color: #dddddd;
+        }
+        
+        .plaza-info strong {
+            color: #ffffff;
+        }
+        
+        .team-list {
+            margin-top: 20px;
+            list-style: none;
+        }
+        
+        .team-list li {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #222222;
+            border-radius: 8px;
+            border-left: 3px solid #555555;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .member-photo {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border: 2px solid #555555;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .member-photo:hover {
+            transform: scale(1.05);
+        }
+        
+        .member-info {
+            flex: 1;
+        }
+        
+        .member-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .member-status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .status-active {
+            background-color: #2e7d32;
+            color: white;
+        }
+        
+        .status-inactive {
+            background-color: #c62828;
+            color: white;
+        }
+        
+        .member-comment {
+            font-size: 13px;
+            color: #aaaaaa;
+            font-style: italic;
+        }
+        
+        .back-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #333333;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .back-button:hover {
+            background-color: #555555;
+        }
+        
+        .logout-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #333333;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            z-index: 102;
+            display: none;
+        }
+        
+        .logout-button:hover {
+            background-color: #555555;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            /* Tablet */
+            .sidebar {
+                width: 240px;
+            }
+            
+            .plaza-list {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            /* Tablet peque帽a y m贸viles grandes */
+            .welcome-title {
+                font-size: 32px;
+            }
+            
+            .welcome-subtitle {
+                font-size: 16px;
+            }
+            
+            .region-title {
+                font-size: 24px;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+            
+            .team-list li {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .member-info {
+                text-align: center;
+            }
+            
+            .member-photo {
+                width: 100px;
+                height: 100px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            /* M贸viles */
+            .plaza-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .welcome-title {
+                font-size: 28px;
+            }
+            
+            .region-card {
+                padding: 20px;
+            }
+            
+            .menu-toggle {
+                top: 15px;
+                left: 15px;
+            }
+            
+            .login-box {
+                padding: 20px;
+            }
+            
+            .member-photo {
+                width: 120px;
+                height: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Modal para imagen ampliada -->
+    <div id="imageModal" class="modal">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+
+    <!-- Pantalla de Login -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-box">
+            <h1 class="login-title">Iniciar Sesi贸n</h1>
+            <input type="text" class="login-input" id="usernameInput" placeholder="Usuario">
+            <input type="password" class="login-input" id="passwordLoginInput" placeholder="Contrase帽a">
+            <button class="login-button" id="loginButton">Ingresar</button>
+            <p id="loginError" class="login-error">Usuario o contrase帽a incorrectos</p>
+        </div>
+    </div>
+    
+    <!-- Bot贸n de logout -->
+    <button class="logout-button" id="logoutButton">Cerrar Sesi贸n</button>
+    
+    <!-- Men煤 hamburguesa para m贸viles -->
+    <button class="menu-toggle" id="menuToggle">鈽?Men煤</button>
+    
+    <!-- Barra lateral -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">Getic</div>
+        
+        <div class="menu-section">
+            <div class="menu-title">Regiones</div>
+            <ul class="menu-items" id="regionMenuItems">
+                <li class="menu-item" data-region="edomex">EDOMEX</li>
+                <li class="menu-item" data-region="jalisco">JALISCO</li>
+                <li class="menu-item" data-region="nuevoleon">NUEVO LEON NORTE</li>
+                <li class="menu-item" data-region="tabasco">TABASCO</li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Contenido principal -->
+    <div class="main-content" id="mainContent">
+        <div class="welcome-container" id="welcome-section">
+            <h1 class="welcome-title">Bienvenido a Getic</h1>
+            <p class="welcome-subtitle">YOUR 24/7 PARTNER</p>
+        </div>
+        
+        <!-- EDOMEX -->
+        <div id="edomex" class="region-card">
+            <h2 class="region-title">Estado de M茅xico (EDOMEX)</h2>
+            <div id="edomex-plazas-container">
+                <ul class="plaza-list">
+                    <li class="plaza-item" data-plaza="morelia-costa">Morelia Costa</li>
+                    <li class="plaza-item" data-plaza="morelia-norte">Morelia Norte</li>
+                    <li class="plaza-item" data-plaza="toluca-metepec">Toluca Metepec</li>
+                    <li class="plaza-item" data-plaza="toluca-nevado">Toluca Nevado</li>
+                    <li class="plaza-item" data-plaza="toluca-zitacuaro">Toluca Zitacuaro</li>
+                </ul>
+            </div>
+            
+            <!-- Detalle de Morelia Costa -->
+            <div id="morelia-costa-detail" class="plaza-detail">
+                <h3 class="plaza-detail-title">Morelia Costa - Informaci贸n Detallada</h3>
+                <div class="plaza-info">
+                    <p><strong>Ubicaci贸n:</strong> Zona costera del Estado de M茅xico</p>
+                    <p><strong>Equipo de trabajo:</strong></p>
+                    <ul class="team-list">
+                        <li>
+                            <img src="https://drive.google.com/thumbnail?id=1FSDs8pQycHvRxDzE3WNEsJnGs9l7z6hj&sz=w200" class="member-photo" alt="Foto de Javier Alejandro Sanchez Vargas" onclick="openModal(this)">
+                            <div class="member-info">
+                                <div class="member-name">Javier Alejandro Sanchez Vargas</div>
+                                <span class="member-status status-active">Activo</span>
+                                <div class="member-comment">Disponible para proyectos urgentes</div>
+                            </div>
+                        </li>
+                        <li>
+                            <img src="https://media-cldnry.s-nbcnews.com/image/upload/t_fit-1000w,f_auto,q_auto:best/rockcms/2024-12/241219-superman-ch-1409-058eb8.jpg" class="member-photo" alt="Foto de Miguel Angel Rosales Saucedo" onclick="openModal(this)">
+                            <div class="member-info">
+                                <div class="member-name">Miguel Angel Rosales Saucedo</div>
+                                <span class="member-status status-active">Activo</span>
+                                <div class="member-comment">Especialista en redes</div>
+                            </div>
+                        </li>
+                        <!-- M谩s miembros... -->
+                    </ul>
+                </div>
+                <button class="back-button" onclick="hidePlazaDetail('morelia-costa', 'edomex')">Volver a la lista</button>
+            </div>
+            
+            <!-- M谩s detalles de plazas... -->
+        </div>
+        
+        <!-- M谩s regiones... -->
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos del DOM
+            const loginContainer = document.getElementById('loginContainer');
+            const usernameInput = document.getElementById('usernameInput');
+            const passwordLoginInput = document.getElementById('passwordLoginInput');
+            const loginButton = document.getElementById('loginButton');
+            const loginError = document.getElementById('loginError');
+            const logoutButton = document.getElementById('logoutButton');
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const regionMenuItems = document.getElementById('regionMenuItems');
+            const regionItems = document.querySelectorAll('.menu-item');
+            const regionCards = document.querySelectorAll('.region-card');
+            const plazaItems = document.querySelectorAll('.plaza-item');
+            const welcomeSection = document.getElementById('welcome-section');
+            
+            // Modal para im谩genes
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            const span = document.getElementsByClassName('close')[0];
+            
+            // Funci贸n para abrir el modal con la imagen
+            window.openModal = function(img) {
+                modal.style.display = "block";
+                modalImg.src = img.src;
+                modalImg.alt = img.alt;
+            }
+            
+            // Cerrar modal al hacer clic en la X
+            span.onclick = function() { 
+                modal.style.display = "none";
+            }
+            
+            // Cerrar modal al hacer clic fuera de la imagen
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    modal.style.display = "none";
+                }
+            }
+            
+            // Variables de estado
+            let currentPlaza = null;
+            let currentRegion = null;
+            let currentUser = null;
+            
+            // Usuarios y contrase帽as por regi贸n
+            const users = {
+                'edomex': {
+                    username: 'edomex_user',
+                    password: 'Edopaz19',
+                    region: 'edomex'
+                },
+                'jalisco': {
+                    username: 'jalisco_user',
+                    password: 'Jalis419',
+                    region: 'jalisco'
+                },
+                'nuevoleon': {
+                    username: 'nuevoleon_user',
+                    password: 'NorteLN',
+                    region: 'nuevoleon'
+                },
+                'tabasco': {
+                    username: 'tabasco_user',
+                    password: 'Tabis5',
+                    region: 'tabasco'
+                }
+            };
+            
+            // Funci贸n para iniciar sesi贸n
+            function login(username, password) {
+                for (const region in users) {
+                    if (users[region].username === username && users[region].password === password) {
+                        currentUser = users[region];
+                        return true;
+                    }
+                }
+                return false;
+            }
+            
+            // Funci贸n para mostrar solo la regi贸n del usuario
+            function showUserRegion() {
+                if (!currentUser) return;
+                
+                // Ocultar todas las regiones
+                regionCards.forEach(card => card.style.display = 'none');
+                
+                // Mostrar solo la regi贸n del usuario
+                document.getElementById(currentUser.region).style.display = 'block';
+                
+                // Mostrar solo el item del men煤 para la regi贸n del usuario
+                regionItems.forEach(item => {
+                    if (item.getAttribute('data-region') === currentUser.region) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            }
+            
+            // Funci贸n para alternar el men煤
+            function toggleMenu() {
+                sidebar.classList.toggle('active');
+                // Asegurarse de que el men煤 se muestre correctamente
+                if (sidebar.classList.contains('active')) {
+                    sidebar.style.transform = 'translateX(0)';
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    sidebar.style.transform = 'translateX(-100%)';
+                    document.body.style.overflow = '';
+                }
+            }
+            
+            // Evento para el bot贸n de login
+            loginButton.addEventListener('click', function() {
+                const username = usernameInput.value;
+                const password = passwordLoginInput.value;
+                
+                if (login(username, password)) {
+                    // Ocultar login
+                    loginContainer.style.display = 'none';
+                    
+                    // Mostrar contenido principal
+                    mainContent.style.display = 'block';
+                    sidebar.style.display = 'block';
+                    logoutButton.style.display = 'block';
+                    
+                    // Mostrar solo la regi贸n del usuario
+                    showUserRegion();
+                    
+                    // Mostrar men煤 en desktop
+                    if (window.innerWidth > 768) {
+                        sidebar.style.transform = 'translateX(0)';
+                    }
+                } else {
+                    loginError.style.display = 'block';
+                }
+            });
+            
+            // Evento para el bot贸n de logout
+            logoutButton.addEventListener('click', function() {
+                // Mostrar login
+                loginContainer.style.display = 'flex';
+                
+                // Ocultar contenido principal
+                mainContent.style.display = 'none';
+                sidebar.style.display = 'none';
+                logoutButton.style.display = 'none';
+                
+                // Resetear valores
+                usernameInput.value = '';
+                passwordLoginInput.value = '';
+                loginError.style.display = 'none';
+                currentUser = null;
+                
+                // Volver al estado inicial
+                welcomeSection.style.display = 'flex';
+                regionCards.forEach(card => card.classList.remove('active'));
+                regionItems.forEach(item => item.classList.remove('active'));
+                
+                // Mostrar contenedores de plazas
+                document.querySelectorAll('[id$="-plazas-container"]').forEach(container => {
+                    container.style.display = 'block';
+                });
+                
+                // Ocultar detalles de plazas
+                document.querySelectorAll('.plaza-detail').forEach(detail => {
+                    detail.classList.remove('active');
+                });
+            });
+            
+            // Evento para el bot贸n de men煤
+            menuToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleMenu();
+            });
+            
+            // Mostrar regi贸n seleccionada
+            regionItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const region = this.getAttribute('data-region');
+                    currentRegion = region;
+                    
+                    // Ocultar todo
+                    welcomeSection.style.display = 'none';
+                    regionCards.forEach(card => card.classList.remove('active'));
+                    
+                    // Remover activo de todos los items del men煤
+                    regionItems.forEach(item => item.classList.remove('active'));
+                    
+                    // Mostrar regi贸n seleccionada
+                    document.getElementById(region).classList.add('active');
+                    this.classList.add('active');
+                    
+                    // Cerrar men煤 en m贸viles
+                    if (window.innerWidth <= 768) {
+                        toggleMenu();
+                    }
+                });
+            });
+            
+            // Mostrar detalles de plaza al hacer clic
+            plazaItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    currentPlaza = this.getAttribute('data-plaza');
+                    // Mostrar detalles de la plaza
+                    document.getElementById(`${currentUser.region}-plazas-container`).style.display = 'none';
+                    document.getElementById(`${currentPlaza}-detail`).classList.add('active');
+                });
+            });
+            
+            // Funci贸n para volver a la lista de plazas
+            window.hidePlazaDetail = function(plazaId, regionId) {
+                document.getElementById(`${plazaId}-detail`).classList.remove('active');
+                document.getElementById(`${regionId}-plazas-container`).style.display = 'block';
+            };
+            
+            // Volver al inicio al hacer clic en el logo
+            document.querySelector('.logo').addEventListener('click', function() {
+                if (!currentUser) return;
+                
+                welcomeSection.style.display = 'flex';
+                regionCards.forEach(card => card.classList.remove('active'));
+                regionItems.forEach(item => item.classList.remove('active'));
+                
+                // Mostrar contenedores de plazas
+                document.querySelectorAll('[id$="-plazas-container"]').forEach(container => {
+                    container.style.display = 'block';
+                });
+                
+                // Ocultar detalles de plazas
+                document.querySelectorAll('.plaza-detail').forEach(detail => {
+                    detail.classList.remove('active');
+                });
+                
+                // Cerrar men煤 en m贸viles
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('active');
+                    sidebar.style.transform = 'translateX(-100%)';
+                    document.body.style.overflow = '';
+                }
+            });
+            
+            // Cerrar men煤 al hacer clic fuera en m贸viles
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth <= 768 && 
+                    sidebar.classList.contains('active') && 
+                    !sidebar.contains(e.target) && 
+                    e.target !== menuToggle) {
+                    toggleMenu();
+                }
+            });
+            
+            // Ajustar el men煤 al cambiar el tama帽o de la ventana
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('active');
+                    sidebar.style.transform = 'translateX(0)';
+                    document.body.style.overflow = '';
+                } else {
+                    if (!sidebar.classList.contains('active')) {
+                        sidebar.style.transform = 'translateX(-100%)';
+                    }
+                }
+            });
+            
+            // Permitir login con Enter
+            passwordLoginInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    loginButton.click();
+                }
+            });
+            
+            // Inicializaci贸n
+            if (window.innerWidth <= 768) {
+                sidebar.style.transform = 'translateX(-100%)';
+            }
+        });
+    </script>
+</body>
+</html>
